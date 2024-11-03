@@ -1,9 +1,9 @@
-# core/management/commands/wait_for_db.py
-
 from typing import Any
 from django.core.management.base import BaseCommand
 from django.db.utils import OperationalError
 import time
+from psycopg2 import OperationalError as Psycopg2Error
+
 
 class Command(BaseCommand):
     help = 'Wait for the database to be available'
@@ -12,14 +12,13 @@ class Command(BaseCommand):
         self.stdout.write("Waiting for database...")
         while True:
             try:
-                # Calling check with the expected arguments
-                self.check(database=['default'])
+                self.check_database_connection(database=['default'])
                 break
-            except OperationalError:
-                time.sleep(1)  # Wait a bit before trying again
+            except (Psycopg2Error, OperationalError):
+                self.stdout.write("Database unavailable, waiting 1 second...")
+                time.sleep(1)
         self.stdout.write(self.style.SUCCESS('Database is ready!'))
 
-    def check(self, database: list[str]) -> None:
-        # Logic to check database connection goes here.
-        # For example, you could try to connect to the database.
+    def check_database_connection(self, database: list[str]) -> None:
+        # Logic to check database connection
         pass
